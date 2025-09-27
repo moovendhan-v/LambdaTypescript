@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
-Description: Minimal AWS Lambda User Management API with TypeScript and Sequelize
+Description: AWS Lambda User Management API with TypeScript and Sequelize (updated)
 
 Globals:
   Function:
@@ -21,6 +21,11 @@ Globals:
         SCHEMAS_PATH: "./schemas"
     Timeout: 30
     MemorySize: 256
+  Api:
+    Cors:
+      AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
+      AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+      AllowOrigin: "'*'"
 
 Parameters:
   Environment:
@@ -28,40 +33,43 @@ Parameters:
     Default: dev
     AllowedValues: [dev, staging, prod]
     Description: Environment name
+  
   DatabaseHost:
     Type: String
     Description: Database host
     Default: localhost
+  
   DatabasePort:
     Type: String
     Description: Database port
     Default: "5432"
+  
   DatabaseName:
     Type: String
     Description: Database name
     Default: lambda_dev
+  
   DatabaseUser:
     Type: String
     Description: Database user
     Default: postgres
+  
   DatabasePassword:
     Type: String
     Description: Database password
     NoEcho: true
     Default: postgres
+  
   JWTSecret:
     Type: String
     Description: JWT secret key
     NoEcho: true
     Default: your-super-secret-jwt-key
+  
   JWTExpiresIn:
     Type: String
     Description: JWT expiration time
     Default: "7d"
-  S3Bucket:
-    Type: String
-    Description: S3 bucket for schema files
-    Default: lambda-user-management-dev-deploy-bucket
 
 Resources:
   # Lambda Layers
@@ -85,110 +93,29 @@ Resources:
         - nodejs20.x
       RetentionPolicy: Retain
 
-  # API Gateway
+  LoginRequestModel:
+    Type: AWS::ApiGateway::Model
+    Properties:
+      RestApiId: !Ref ServerlessRestApi
+      ContentType: application/json
+      Schema: !Transform
+        Name: AWS::Include
+        Parameters:
+          Location: ./src/api-schemas/models/auth/login-request.json
+
+  # API Gateway definition
   ServerlessRestApi:
     Type: AWS::Serverless::Api
     Properties:
       StageName: Prod
+      models:
+        - name: LoginRequest
+          schema: !Ref LoginRequestModel
       Cors:
-        AllowMethods: "'POST,OPTIONS'"
+        AllowMethods: "'GET,POST,PUT,DELETE,OPTIONS'"
         AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
         AllowOrigin: "'*'"
-      RequestValidator: 
-        ValidateRequestBody: true
-        ValidateRequestParameters: true
-      Models:
-        RegisterRequest:
-          $schema: http://json-schema.org/draft-04/schema#
-          title: Register Request
-          type: object
-          properties:
-            email:
-              type: string
-              format: email
-            password:
-              type: string
-              minLength: 6
-            name:
-              type: string
-              minLength: 1
-          required:
-            - email
-            - password
-            - name
-          additionalProperties: false
-        LoginRequest:
-          $schema: http://json-schema.org/draft-04/schema#
-          title: Login Request
-          type: object
-          properties:
-            email:
-              type: string
-              format: email
-            password:
-              type: string
-              minLength: 1
-          required:
-            - email
-            - password
-          additionalProperties: false
-        SuccessResponse:
-          $schema: http://json-schema.org/draft-04/schema#
-          title: Success Response
-          type: object
-          properties:
-            success:
-              type: boolean
-            message:
-              type: string
-            data:
-              type: object
-          required:
-            - success
-            - message
-          additionalProperties: false
-        ErrorResponse:
-          $schema: http://json-schema.org/draft-04/schema#
-          title: Error Response
-          type: object
-          properties:
-            success:
-              type: boolean
-            message:
-              type: string
-            error:
-              type: object
-          required:
-            - success
-            - message
-          additionalProperties: false
-      GatewayResponses:
-        BAD_REQUEST_BODY:
-          ResponseTemplates:
-            application/json: |
-              {
-                "success": false,
-                "message": "Invalid request body",
-                "error": {
-                  "details": "$context.error.validationErrorString"
-                }
-              }
-          ResponseParameters:
-            Headers:
-              Access-Control-Allow-Origin: "'*'"
-        BAD_REQUEST_PARAMETERS:
-          ResponseTemplates:
-            application/json: |
-              {
-                "success": false,
-                "message": "Invalid request parameters", 
-                "error": {
-                  "details": "$context.error.validationErrorString"
-                }
-              }
-          ResponseParameters:
-            Headers:
-              Access-Control-Allow-Origin: "'*'"
+
 
   # Auth Functions
   RegisterFunction:
@@ -203,10 +130,6 @@ Resources:
             RestApiId: !Ref ServerlessRestApi
             Path: /auth/register
             Method: POST
-            RequestModel:
-              Model: RegisterRequest
-              Required: true
-              ValidateBody: true
 
   LoginFunction:
     Type: AWS::Serverless::Function
@@ -220,10 +143,6 @@ Resources:
             RestApiId: !Ref ServerlessRestApi
             Path: /auth/login
             Method: POST
-            RequestModel:
-              Model: LoginRequest
-              Required: true
-              ValidateBody: true
 
 Outputs:
   ApiUrl:
@@ -231,6 +150,7 @@ Outputs:
     Value: !Sub 'https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/'
     Export:
       Name: !Sub '${AWS::StackName}-ApiUrl'
+  
   ApiId:
     Description: API Gateway ID
     Value: !Ref ServerlessRestApi
