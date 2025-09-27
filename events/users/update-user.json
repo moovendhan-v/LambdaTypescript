@@ -1,0 +1,19 @@
+{
+    "httpMethod": "PUT",
+    "path": "/users/550e8400-e29b-41d4-a716-446655440000",
+    "headers": {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI1NTBlODQwMC1lMjliLTQxZDQtYTcxNi00NDY2NTU0NDAwMDAiLCJlbWFpbCI6ImpvaG4uZG9lQGV4YW1wbGUuY29tIiwiaWF0IjoxNzAwMDAwMDAwfQ.example-signature"
+    },
+    "body": "{\"firstName\":\"Johnny\",\"lastName\":\"Doe\",\"isActive\":true}",
+    "requestContext": {
+      "requestId": "test-update-user-request",
+      "httpMethod": "PUT",
+      "path": "/users/550e8400-e29b-41d4-a716-446655440000"
+    },
+    "queryStringParameters": null,
+    "pathParameters": {
+      "id": "550e8400-e29b-41d4-a716-446655440000"
+    },
+    "isBase64Encoded": false
+  }

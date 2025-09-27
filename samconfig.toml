@@ -1,0 +1,77 @@
+version = 0.1
+
+[default]
+[default.deploy]
+[default.deploy.parameters]
+stack_name = "lambda-user-management"
+s3_bucket = "lambda-user-management-deploy-bucket"
+s3_prefix = "lambda-user-management"
+region = "us-east-1"
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = [
+    "Environment=\"dev\"",
+    "DatabaseHost=\"localhost\"",
+    "DatabasePort=\"5432\"",
+    "DatabaseName=\"lambda_dev\"",
+    "DatabaseUser=\"postgres\"",
+    "DatabasePassword=\"postgres\"",
+    "JWTSecret=\"your-super-secret-jwt-key\"",
+    "JWTExpiresIn=\"7d\""
+]
+
+[dev]
+[dev.deploy]
+[dev.deploy.parameters]
+stack_name = "lambda-user-management-dev"
+s3_bucket = "lambda-user-management-dev-deploy-bucket"
+s3_prefix = "lambda-user-management-dev"
+region = "us-east-1"
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = [
+    "Environment=\"dev\"",
+    "DatabaseHost=\"localhost\"",
+    "DatabasePort=\"5432\"",
+    "DatabaseName=\"lambda_dev\"",
+    "DatabaseUser=\"postgres\"",
+    "DatabasePassword=\"postgres\"",
+    "JWTSecret=\"your-super-secret-jwt-key\"",
+    "JWTExpiresIn=\"7d\""
+]
+
+[staging]
+[staging.deploy]
+[staging.deploy.parameters]
+stack_name = "lambda-user-management-staging"
+s3_bucket = "lambda-user-management-staging-deploy-bucket"
+s3_prefix = "lambda-user-management-staging"
+region = "us-east-1"
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = [
+    "Environment=\"staging\"",
+    "DatabaseHost=\"your-staging-db-host\"",
+    "DatabasePort=\"5432\"",
+    "DatabaseName=\"lambda_staging\"",
+    "DatabaseUser=\"your-staging-db-user\"",
+    "DatabasePassword=\"your-staging-db-password\"",
+    "JWTSecret=\"your-staging-jwt-secret\"",
+    "JWTExpiresIn=\"7d\""
+]
+
+[prod]
+[prod.deploy]
+[prod.deploy.parameters]
+stack_name = "lambda-user-management-prod"
+s3_bucket = "lambda-user-management-prod-deploy-bucket"
+s3_prefix = "lambda-user-management-prod"
+region = "us-east-1"
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = [
+    "Environment=\"prod\"",
+    "DatabaseHost=\"your-prod-db-host\"",
+    "DatabasePort=\"5432\"",
+    "DatabaseName=\"lambda_prod\"",
+    "DatabaseUser=\"your-prod-db-user\"",
+    "DatabasePassword=\"your-prod-db-password\"",
+    "JWTSecret=\"your-prod-jwt-secret\"",
+    "JWTExpiresIn=\"7d\""
+]

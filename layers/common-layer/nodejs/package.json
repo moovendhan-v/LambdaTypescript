@@ -1,0 +1,11 @@
+{
+  "name": "lambda-user-management-common-layer",
+  "version": "1.0.0",
+  "description": "Common dependencies for Lambda User Management",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "joi": "^17.11.0",
+    "jsonwebtoken": "^9.0.2",
+    "uuid": "^9.0.1"
+  }
+}

@@ -1,0 +1,111 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "users-list-response",
+  "title": "Users List Response",
+  "description": "Response format for listing users with pagination",
+  "type": "object",
+  "properties": {
+    "success": {
+      "type": "boolean",
+      "enum": [true]
+    },
+    "data": {
+      "type": "object",
+      "properties": {
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "user-response.json"
+          },
+          "description": "Array of user objects"
+        },
+        "pagination": {
+          "type": "object",
+          "properties": {
+            "total": {
+              "$ref": "../common/base-schemas.json#/definitions/positiveInteger",
+              "description": "Total number of users"
+            },
+            "page": {
+              "$ref": "../common/base-schemas.json#/definitions/paginationPage",
+              "description": "Current page number"
+            },
+            "limit": {
+              "$ref": "../common/base-schemas.json#/definitions/paginationLimit",
+              "description": "Number of items per page"
+            },
+            "totalPages": {
+              "$ref": "../common/base-schemas.json#/definitions/positiveInteger",
+              "description": "Total number of pages"
+            }
+          },
+          "required": ["total", "page", "limit", "totalPages"],
+          "additionalProperties": false,
+          "description": "Pagination information"
+        }
+      },
+      "required": ["items", "pagination"],
+      "additionalProperties": false
+    },
+    "message": {
+      "type": "string",
+      "description": "Success message"
+    },
+    "timestamp": {
+      "$ref": "../common/base-schemas.json#/definitions/iso8601DateTime"
+    }
+  },
+  "required": ["success", "data"],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "success": true,
+      "data": {
+        "items": [
+          {
+            "id": "123e4567-e89b-12d3-a456-426614174000",
+            "email": "john.doe@example.com",
+            "firstName": "John",
+            "lastName": "Doe",
+            "isActive": true,
+            "emailVerified": true,
+            "createdAt": "2025-01-01T10:00:00.000Z",
+            "updatedAt": "2025-01-01T10:00:00.000Z",
+            "roles": [
+              {
+                "id": "456e7890-e89b-12d3-a456-426614174001",
+                "name": "user",
+                "permissions": ["read:profile", "write:profile"]
+              }
+            ]
+          },
+          {
+            "id": "234e5678-e89b-12d3-a456-426614174000",
+            "email": "jane.smith@example.com",
+            "firstName": "Jane",
+            "lastName": "Smith",
+            "isActive": true,
+            "emailVerified": false,
+            "createdAt": "2025-01-02T10:00:00.000Z",
+            "updatedAt": "2025-01-02T10:00:00.000Z",
+            "roles": [
+              {
+                "id": "567e8901-e89b-12d3-a456-426614174001",
+                "name": "admin",
+                "permissions": ["read:users", "write:users", "read:profile", "write:profile"]
+              }
+            ]
+          }
+        ],
+        "pagination": {
+          "total": 25,
+          "page": 1,
+          "limit": 10,
+          "totalPages": 3
+        }
+      },
+      "message": "Users retrieved successfully",
+      "timestamp": "2025-01-01T12:00:00.000Z"
+    }
+  ]
+}

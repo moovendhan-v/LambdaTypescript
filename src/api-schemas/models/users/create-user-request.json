@@ -1,0 +1,29 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "create-user-request",
+    "title": "Create User Request",
+    "description": "Schema for creating a new user",
+    "type": "object",
+    "properties": {
+      "email": {
+        "$ref": "../common/base-schemas.json#/definitions/email"
+      },
+      "password": {
+        "$ref": "../common/base-schemas.json#/definitions/password"
+      },
+      "firstName": {
+        "$ref": "../common/base-schemas.json#/definitions/name"
+      },
+      "lastName": {
+        "$ref": "../common/base-schemas.json#/definitions/name"
+      },
+      "role": {
+        "type": "string",
+        "enum": ["user", "admin", "moderator"],
+        "default": "user",
+        "description": "User role assignment"
+      }
+    },
+    "required": ["email", "password", "firstName", "lastName"],
+    "additionalProperties": false
+  }

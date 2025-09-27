@@ -1,0 +1,24 @@
+{
+    "httpMethod": "POST",
+    "path": "/auth/register",
+    "headers": {
+      "Content-Type": "application/json",
+      "Accept": "application/json"
+    },
+    "body": "{\"email\":\"john.doe@example.com\",\"password\":\"SecurePass123!\",\"firstName\":\"John\",\"lastName\":\"Doe\"}",
+    "requestContext": {
+      "requestId": "test-register-request",
+      "httpMethod": "POST",
+      "path": "/auth/register",
+      "stage": "Prod",
+      "requestTime": "09/Apr/2025:12:34:56 +0000",
+      "requestTimeEpoch": 1644312896,
+      "identity": {
+        "sourceIp": "127.0.0.1",
+        "userAgent": "Custom User Agent String"
+      }
+    },
+    "queryStringParameters": null,
+    "pathParameters": null,
+    "isBase64Encoded": false
+  }

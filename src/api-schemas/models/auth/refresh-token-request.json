@@ -1,0 +1,22 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "refresh-token-request",
+    "title": "Refresh Token Request",
+    "description": "Schema for token refresh endpoint",
+    "type": "object",
+    "properties": {
+      "token": {
+        "type": "string",
+        "minLength": 1,
+        "pattern": "^[A-Za-z0-9-_]+\\.[A-Za-z0-9-_]+\\.[A-Za-z0-9-_]+$",
+        "description": "Valid JWT token"
+      }
+    },
+    "required": ["token"],
+    "additionalProperties": false,
+    "examples": [
+      {
+        "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIxMjMiLCJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20ifQ.signature"
+      }
+    ]
+  }

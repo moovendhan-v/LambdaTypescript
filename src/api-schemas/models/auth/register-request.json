@@ -1,0 +1,31 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "register-request",
+    "title": "User Registration Request",
+    "description": "Schema for user registration endpoint",
+    "type": "object",
+    "properties": {
+      "email": {
+        "$ref": "../common/base-schemas.json#/definitions/email"
+      },
+      "password": {
+        "$ref": "../common/base-schemas.json#/definitions/password"
+      },
+      "firstName": {
+        "$ref": "../common/base-schemas.json#/definitions/name"
+      },
+      "lastName": {
+        "$ref": "../common/base-schemas.json#/definitions/name"
+      }
+    },
+    "required": ["email", "password", "firstName", "lastName"],
+    "additionalProperties": false,
+    "examples": [
+      {
+        "email": "john.doe@example.com",
+        "password": "SecurePass123!",
+        "firstName": "John",
+        "lastName": "Doe"
+      }
+    ]
+  }

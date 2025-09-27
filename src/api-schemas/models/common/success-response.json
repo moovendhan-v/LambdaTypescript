@@ -1,0 +1,41 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "success-response",
+    "title": "Success Response",
+    "description": "Standard success response format",
+    "type": "object",
+    "properties": {
+      "success": {
+        "type": "boolean",
+        "enum": [true]
+      },
+      "data": {
+        "description": "Response data payload"
+      },
+      "message": {
+        "type": "string",
+        "description": "Success message"
+      },
+      "timestamp": {
+        "$ref": "base-schemas.json#/definitions/iso8601DateTime"
+      }
+    },
+    "required": ["success"],
+    "additionalProperties": false,
+    "examples": [
+      {
+        "success": true,
+        "message": "Operation completed successfully",
+        "timestamp": "2025-01-01T12:00:00.000Z"
+      },
+      {
+        "success": true,
+        "data": {
+          "id": "123e4567-e89b-12d3-a456-426614174000",
+          "name": "Example Item"
+        },
+        "message": "Item created successfully",
+        "timestamp": "2025-01-01T12:00:00.000Z"
+      }
+    ]
+  }

@@ -1,0 +1,176 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "profile-response",
+  "title": "Profile Response",
+  "description": "User profile object response format",
+  "type": "object",
+  "properties": {
+    "id": {
+      "$ref": "../common/base-schemas.json#/definitions/uuid"
+    },
+    "userId": {
+      "$ref": "../common/base-schemas.json#/definitions/uuid"
+    },
+    "avatar": {
+      "oneOf": [
+        {
+          "type": "string",
+          "format": "uri",
+          "maxLength": 500
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "URL to user's avatar image"
+    },
+    "bio": {
+      "oneOf": [
+        {
+          "type": "string",
+          "maxLength": 1000
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "User biography"
+    },
+    "phoneNumber": {
+      "oneOf": [
+        {
+          "$ref": "../common/base-schemas.json#/definitions/phoneNumber"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "dateOfBirth": {
+      "oneOf": [
+        {
+          "$ref": "../common/base-schemas.json#/definitions/iso8601Date"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "description": "User's date of birth"
+    },
+    "address": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "street": {
+              "type": "string",
+              "maxLength": 255,
+              "description": "Street address"
+            },
+            "city": {
+              "type": "string",
+              "maxLength": 100,
+              "description": "City name"
+            },
+            "state": {
+              "type": "string",
+              "maxLength": 100,
+              "description": "State or province"
+            },
+            "country": {
+              "type": "string",
+              "maxLength": 100,
+              "pattern": "^[A-Z]{2}$",
+              "description": "Country code (ISO 3166-1 alpha-2)"
+            },
+            "zipCode": {
+              "type": "string",
+              "maxLength": 20,
+              "pattern": "^[A-Za-z0-9\\s-]+$",
+              "description": "Postal/ZIP code"
+            }
+          },
+          "additionalProperties": false,
+          "description": "User's address information"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "preferences": {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "theme": {
+              "type": "string",
+              "enum": ["light", "dark", "auto"],
+              "default": "light",
+              "description": "UI theme preference"
+            },
+            "notifications": {
+              "type": "boolean",
+              "default": true,
+              "description": "Email notifications enabled"
+            },
+            "language": {
+              "type": "string",
+              "enum": ["en", "es", "fr", "de", "it", "pt", "zh"],
+              "default": "en",
+              "description": "Preferred language"
+            },
+            "timezone": {
+              "type": "string",
+              "pattern": "^[A-Za-z]+/[A-Za-z_]+$",
+              "description": "User's timezone (IANA timezone)"
+            }
+          },
+          "additionalProperties": true,
+          "description": "User preferences"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "createdAt": {
+      "$ref": "../common/base-schemas.json#/definitions/iso8601DateTime"
+    },
+    "updatedAt": {
+      "$ref": "../common/base-schemas.json#/definitions/iso8601DateTime"
+    }
+  },
+  "required": [
+    "id",
+    "userId",
+    "createdAt",
+    "updatedAt"
+  ],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "id": "789e0123-e89b-12d3-a456-426614174002",
+      "userId": "123e4567-e89b-12d3-a456-426614174000",
+      "avatar": "https://example.com/avatar.jpg",
+      "bio": "Software developer with 5+ years of experience",
+      "phoneNumber": "+1234567890",
+      "dateOfBirth": "1990-01-01",
+      "address": {
+        "street": "123 Main St",
+        "city": "New York",
+        "state": "NY",
+        "country": "US",
+        "zipCode": "10001"
+      },
+      "preferences": {
+        "theme": "dark",
+        "notifications": true,
+        "language": "en",
+        "timezone": "America/New_York"
+      },
+      "createdAt": "2025-01-01T10:00:00.000Z",
+      "updatedAt": "2025-01-01T10:00:00.000Z"
+    }
+  ]
+}

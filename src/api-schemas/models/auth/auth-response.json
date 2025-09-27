@@ -1,0 +1,82 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "auth-response",
+  "title": "Authentication Response",
+  "description": "Response format for authentication endpoints",
+  "type": "object",
+  "properties": {
+    "success": {
+      "type": "boolean",
+      "enum": [true]
+    },
+    "data": {
+      "type": "object",
+      "properties": {
+        "user": {
+          "$ref": "../users/user-response.json"
+        },
+        "tokens": {
+          "type": "object",
+          "properties": {
+            "accessToken": {
+              "type": "string",
+              "description": "JWT access token"
+            },
+            "refreshToken": {
+              "type": "string",
+              "description": "JWT refresh token"
+            },
+            "expiresIn": {
+              "type": "integer",
+              "description": "Token expiration time in seconds"
+            }
+          },
+          "required": ["accessToken", "refreshToken", "expiresIn"],
+          "additionalProperties": false
+        }
+      },
+      "required": ["user", "tokens"],
+      "additionalProperties": false
+    },
+    "message": {
+      "type": "string",
+      "description": "Success message"
+    },
+    "timestamp": {
+      "$ref": "../common/base-schemas.json#/definitions/iso8601DateTime"
+    }
+  },
+  "required": ["success", "data"],
+  "additionalProperties": false,
+  "examples": [
+    {
+      "success": true,
+      "data": {
+        "user": {
+          "id": "123e4567-e89b-12d3-a456-426614174000",
+          "email": "john.doe@example.com",
+          "firstName": "John",
+          "lastName": "Doe",
+          "isActive": true,
+          "emailVerified": true,
+          "createdAt": "2025-01-01T10:00:00.000Z",
+          "updatedAt": "2025-01-01T10:00:00.000Z",
+          "roles": [
+            {
+              "id": "456e7890-e89b-12d3-a456-426614174001",
+              "name": "user",
+              "permissions": ["read:profile", "write:profile"]
+            }
+          ]
+        },
+        "tokens": {
+          "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+          "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+          "expiresIn": 3600
+        }
+      },
+      "message": "Login successful",
+      "timestamp": "2025-01-01T12:00:00.000Z"
+    }
+  ]
+}

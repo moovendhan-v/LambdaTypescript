@@ -1,0 +1,28 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "update-user-request",
+    "title": "Update User Request",
+    "description": "Schema for updating user information",
+    "type": "object",
+    "properties": {
+      "firstName": {
+        "$ref": "../common/base-schemas.json#/definitions/name"
+      },
+      "lastName": {
+        "$ref": "../common/base-schemas.json#/definitions/name"
+      },
+      "isActive": {
+        "type": "boolean",
+        "description": "Whether the user account is active"
+      }
+    },
+    "minProperties": 1,
+    "additionalProperties": false,
+    "examples": [
+      {
+        "firstName": "Johnny",
+        "lastName": "Doe",
+        "isActive": true
+      }
+    ]
+  }

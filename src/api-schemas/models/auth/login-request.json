@@ -1,0 +1,24 @@
+{
+  "title": "User Login Request",
+  "description": "Schema for user login endpoint",
+  "type": "object",
+  "definitions": {
+    "email": {
+      "type": "string",
+      "format": "email",
+      "description": "Valid email address of the user"
+    }
+  },
+  "properties": {
+    "email": {
+      "$ref": "#/definitions/email"
+    },
+    "password": {
+      "type": "string",
+      "minLength": 1,
+      "description": "User password"
+    }
+  },
+  "required": ["email", "password"],
+  "additionalProperties": false
+}

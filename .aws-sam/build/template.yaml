@@ -1,0 +1,240 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Minimal AWS Lambda User Management API with TypeScript and Sequelize
+Globals:
+  Function:
+    Runtime: nodejs20.x
+    Layers:
+    - Ref: CommonLayer
+    - Ref: SequelizeLayer
+    Environment:
+      Variables:
+        ENVIRONMENT:
+          Ref: Environment
+        DATABASE_HOST:
+          Ref: DatabaseHost
+        DATABASE_PORT:
+          Ref: DatabasePort
+        DATABASE_NAME:
+          Ref: DatabaseName
+        DATABASE_USER:
+          Ref: DatabaseUser
+        DATABASE_PASSWORD:
+          Ref: DatabasePassword
+        JWT_SECRET:
+          Ref: JWTSecret
+        JWT_EXPIRES_IN:
+          Ref: JWTExpiresIn
+        SCHEMAS_PATH: ./schemas
+    Timeout: 30
+    MemorySize: 256
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues:
+    - dev
+    - staging
+    - prod
+    Description: Environment name
+  DatabaseHost:
+    Type: String
+    Description: Database host
+    Default: localhost
+  DatabasePort:
+    Type: String
+    Description: Database port
+    Default: '5432'
+  DatabaseName:
+    Type: String
+    Description: Database name
+    Default: lambda_dev
+  DatabaseUser:
+    Type: String
+    Description: Database user
+    Default: postgres
+  DatabasePassword:
+    Type: String
+    Description: Database password
+    NoEcho: true
+    Default: postgres
+  JWTSecret:
+    Type: String
+    Description: JWT secret key
+    NoEcho: true
+    Default: your-super-secret-jwt-key
+  JWTExpiresIn:
+    Type: String
+    Description: JWT expiration time
+    Default: 7d
+  S3Bucket:
+    Type: String
+    Description: S3 bucket for schema files
+    Default: lambda-user-management-dev-deploy-bucket
+Resources:
+  CommonLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: lambda-user-management-common-layer
+      Description: Common dependencies layer
+      ContentUri: ../../layers/common-layer
+      CompatibleRuntimes:
+      - nodejs20.x
+      RetentionPolicy: Retain
+  SequelizeLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: lambda-user-management-sequelize-layer
+      Description: Sequelize ORM dependencies layer
+      ContentUri: ../../layers/sequelize-layer
+      CompatibleRuntimes:
+      - nodejs20.x
+      RetentionPolicy: Retain
+  ServerlessRestApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Prod
+      Cors:
+        AllowMethods: '''POST,OPTIONS'''
+        AllowHeaders: '''Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'''
+        AllowOrigin: '''*'''
+      DefinitionBody:
+        openapi: 3.0.0
+        info:
+          title: User Management API
+          version: 1.0.0
+        paths:
+          /auth/register:
+            post:
+              requestBody:
+                required: true
+                content:
+                  application/json:
+                    schema:
+                      $ref: '#/components/schemas/RegisterRequest'
+              responses:
+                '200':
+                  description: Success
+                  content:
+                    application/json:
+                      schema:
+                        $ref: '#/components/schemas/SuccessResponse'
+                '400':
+                  description: Bad Request
+                  content:
+                    application/json:
+                      schema:
+                        $ref: '#/components/schemas/ErrorResponse'
+              x-amazon-apigateway-request-validator: validate-body
+              x-amazon-apigateway-integration:
+                type: aws_proxy
+                httpMethod: POST
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${RegisterFunction.Arn}/invocations
+          /auth/login:
+            post:
+              requestBody:
+                required: true
+                content:
+                  application/json:
+                    schema:
+                      $ref: '#/components/schemas/LoginRequest'
+              responses:
+                '200':
+                  description: Success
+                  content:
+                    application/json:
+                      schema:
+                        $ref: '#/components/schemas/SuccessResponse'
+                '400':
+                  description: Bad Request
+                  content:
+                    application/json:
+                      schema:
+                        $ref: '#/components/schemas/ErrorResponse'
+              x-amazon-apigateway-request-validator: validate-body
+              x-amazon-apigateway-integration:
+                type: aws_proxy
+                httpMethod: POST
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LoginFunction.Arn}/invocations
+        components:
+          schemas:
+            RegisterRequest:
+              Fn::Transform:
+                Name: AWS::Include
+                Parameters:
+                  Location: ../../src/api-schemas/models/auth/register-request.json
+            LoginRequest:
+              Fn::Transform:
+                Name: AWS::Include
+                Parameters:
+                  Location: ../../src/api-schemas/models/auth/login-request.json
+            SuccessResponse:
+              Fn::Transform:
+                Name: AWS::Include
+                Parameters:
+                  Location: ../../src/api-schemas/models/common/success-response.json
+            ErrorResponse:
+              Fn::Transform:
+                Name: AWS::Include
+                Parameters:
+                  Location: ../../src/api-schemas/models/common/error-response.json
+        x-amazon-apigateway-request-validators:
+          validate-body:
+            validateRequestParameters: false
+            validateRequestBody: true
+        x-amazon-apigateway-gateway-responses:
+          BAD_REQUEST_BODY:
+            statusCode: 400
+            responseTemplates:
+              application/json: "{\n  \"success\": false,\n  \"message\": \"Invalid\
+                \ request body\",\n  \"error\": {\n    \"details\": \"$context.error.validationErrorString\"\
+                \n  }\n}\n"
+            responseParameters:
+              gatewayresponse.header.Access-Control-Allow-Origin: '''*'''
+  RegisterFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: RegisterFunction
+      Handler: auth-handler.register
+      Events:
+        RegisterApi:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ServerlessRestApi
+            Path: /auth/register
+            Method: POST
+    Metadata:
+      SamResourceId: RegisterFunction
+  LoginFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: LoginFunction
+      Handler: auth-handler.login
+      Events:
+        LoginApi:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ServerlessRestApi
+            Path: /auth/login
+            Method: POST
+    Metadata:
+      SamResourceId: LoginFunction
+Outputs:
+  ApiUrl:
+    Description: API Gateway endpoint URL
+    Value:
+      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod/
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-ApiUrl
+  ApiId:
+    Description: API Gateway ID
+    Value:
+      Ref: ServerlessRestApi
+    Export:
+      Name:
+        Fn::Sub: ${AWS::StackName}-ApiId

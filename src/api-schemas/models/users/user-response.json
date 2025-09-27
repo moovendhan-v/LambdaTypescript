@@ -1,0 +1,85 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "$id": "user-response",
+    "title": "User Response",
+    "description": "User object response format",
+    "type": "object",
+    "properties": {
+      "id": {
+        "$ref": "../common/base-schemas.json#/definitions/uuid"
+      },
+      "email": {
+        "$ref": "../common/base-schemas.json#/definitions/email"
+      },
+      "firstName": {
+        "$ref": "../common/base-schemas.json#/definitions/name"
+      },
+      "lastName": {
+        "$ref": "../common/base-schemas.json#/definitions/name"
+      },
+      "isActive": {
+        "type": "boolean"
+      },
+      "emailVerified": {
+        "type": "boolean"
+      },
+      "lastLoginAt": {
+        "oneOf": [
+          {
+            "$ref": "../common/base-schemas.json#/definitions/iso8601DateTime"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "createdAt": {
+        "$ref": "../common/base-schemas.json#/definitions/iso8601DateTime"
+      },
+      "updatedAt": {
+        "$ref": "../common/base-schemas.json#/definitions/iso8601DateTime"
+      },
+      "profile": {
+        "oneOf": [
+          {
+            "$ref": "../profiles/profile-response.json"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "roles": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "$ref": "../common/base-schemas.json#/definitions/uuid"
+            },
+            "name": {
+              "type": "string"
+            },
+            "permissions": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": ["id", "name", "permissions"]
+        }
+      }
+    },
+    "required": [
+      "id",
+      "email", 
+      "firstName", 
+      "lastName", 
+      "isActive", 
+      "emailVerified", 
+      "createdAt", 
+      "updatedAt"
+    ],
+    "additionalProperties": false
+  }
