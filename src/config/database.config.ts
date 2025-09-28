@@ -48,8 +48,38 @@ const config: DatabaseConfig = {
   },
 };
 
-const environment = process.env.NODE_ENV || 'development';
-const dbConfig = config[environment];
+const environment = process.env.ENVIRONMENT === 'dev' ? 'development' :
+                   process.env.ENVIRONMENT === 'staging' ? 'test' :
+                   process.env.ENVIRONMENT === 'prod' ? 'production' :
+                   process.env.NODE_ENV || 'development';
+
+logger.info('Database config environment variables:', {
+  ENVIRONMENT: process.env.ENVIRONMENT,
+  DATABASE_HOST: process.env.DATABASE_HOST,
+  DATABASE_PORT: process.env.DATABASE_PORT,
+  DATABASE_NAME: process.env.DATABASE_NAME,
+  DATABASE_USER: process.env.DATABASE_USER,
+  NODE_ENV: process.env.NODE_ENV,
+});
+
+// Override config with environment variables if available
+const dbConfig = {
+  ...config[environment],
+  host: process.env.DATABASE_HOST || config[environment].host,
+  port: parseInt(process.env.DATABASE_PORT || config[environment].port?.toString() || '5432'),
+  database: process.env.DATABASE_NAME || config[environment].database,
+  username: process.env.DATABASE_USER || config[environment].username,
+  password: process.env.DATABASE_PASSWORD || config[environment].password,
+  dialect: config[environment].dialect,
+};
+
+logger.info('Final database config:', {
+  environment,
+  host: dbConfig.host,
+  port: dbConfig.port,
+  database: dbConfig.database,
+  username: dbConfig.username,
+});
 
 let sequelizeInstance: Sequelize;
 

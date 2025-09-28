@@ -1,4 +1,5 @@
 // src/services/user.service.ts
+import { Effect } from 'effect';
 import { userRepository } from '@/repositories/user.repository';
 import { logger } from '@/utils/logger';
 import {
@@ -6,67 +7,76 @@ import {
   IUpdateUserRequest,
 } from '@/interfaces/user.interface';
 import { PaginationResponse } from '@/types/response.types';
+import { DatabaseError, NotFoundError } from '@/types/effect.types';
 
 export class UserService {
-  async getUserById(id: string): Promise<IUserResponse> {
-    logger.info('Getting user by ID', { userId: id });
+  getUserById(id: string): Effect.Effect<IUserResponse, DatabaseError | NotFoundError> {
+    return Effect.gen(function* () {
+      logger.info('Getting user by ID', { userId: id });
 
-    const user = await userRepository.findByIdWithProfile(id);
-    if (!user) {
-      throw new Error('User not found');
-    }
+      const user = yield* userRepository.findByIdWithProfile(id);
+      if (!user) {
+        return yield* Effect.fail(new NotFoundError({ message: 'User not found' }));
+      }
 
-    return user.toSafeObject();
+      return user.toSafeObject();
+    });
   }
 
-  async getUsers(
+  getUsers(
     page: number = 1,
     limit: number = 10,
     search: string = ''
-  ): Promise<PaginationResponse<IUserResponse>> {
+  ): Effect.Effect<PaginationResponse<IUserResponse>, DatabaseError> {
     logger.info('Getting users with pagination', { page, limit, search });
 
-    return await userRepository.findUsersWithPagination(page, limit, search);
+    return userRepository.findUsersWithPagination(page, limit, search);
   }
 
-  async updateUser(id: string, updateData: IUpdateUserRequest): Promise<IUserResponse> {
-    logger.info('Updating user', { userId: id });
+  updateUser(id: string, updateData: IUpdateUserRequest): Effect.Effect<IUserResponse, DatabaseError | NotFoundError> {
+    return Effect.gen(function* () {
+      logger.info('Updating user', { userId: id });
 
-    // Verify user exists
-    const existingUser = await userRepository.findById(id);
-    if (!existingUser) {
-      throw new Error('User not found');
-    }
+      // Verify user exists
+      const existingUser = yield* userRepository.findById(id);
+      if (!existingUser) {
+        return yield* Effect.fail(new NotFoundError({ message: 'User not found' }));
+      }
 
-    // Update user
-    const updatedUser = await userRepository.update(id, updateData);
-    return updatedUser.toSafeObject();
+      // Update user
+      const updatedUser = yield* userRepository.update(id, updateData);
+      return updatedUser.toSafeObject();
+    });
   }
 
-  async deactivateUser(id: string): Promise<void> {
-    logger.info('Deactivating user', { userId: id });
+  deactivateUser(id: string): Effect.Effect<void, DatabaseError | NotFoundError> {
+    return Effect.gen(function* () {
+      logger.info('Deactivating user', { userId: id });
 
-    // Verify user exists
-    const user = await userRepository.findById(id);
-    if (!user) {
-      throw new Error('User not found');
-    }
+      // Verify user exists
+      const user = yield* userRepository.findById(id);
+      if (!user) {
+        return yield* Effect.fail(new NotFoundError({ message: 'User not found' }));
+      }
 
-    // Deactivate user
-    await userRepository.update(id, { isActive: false });
+      // Deactivate user
+      yield* userRepository.update(id, { isActive: false });
+    });
   }
 
-  async activateUser(id: string): Promise<void> {
-    logger.info('Activating user', { userId: id });
+  activateUser(id: string): Effect.Effect<void, DatabaseError | NotFoundError> {
+    return Effect.gen(function* () {
+      logger.info('Activating user', { userId: id });
 
-    // Verify user exists
-    const user = await userRepository.findById(id);
-    if (!user) {
-      throw new Error('User not found');
-    }
+      // Verify user exists
+      const user = yield* userRepository.findById(id);
+      if (!user) {
+        return yield* Effect.fail(new NotFoundError({ message: 'User not found' }));
+      }
 
-    // Activate user
-    await userRepository.update(id, { isActive: true });
+      // Activate user
+      yield* userRepository.update(id, { isActive: true });
+    });
   }
 }
 

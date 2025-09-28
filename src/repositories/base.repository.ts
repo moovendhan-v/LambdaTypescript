@@ -1,6 +1,8 @@
 // src/repositories/base.repository.ts
 import { Model, ModelStatic, FindOptions, DestroyOptions, CreateOptions, UpdateOptions } from 'sequelize';
+import { Effect } from 'effect';
 import { logger } from '@/utils/logger';
+import { DatabaseError, NotFoundError } from '@/types/effect.types';
 
 export abstract class BaseRepository<T extends Model> {
   protected model: ModelStatic<T>;
@@ -9,53 +11,59 @@ export abstract class BaseRepository<T extends Model> {
     this.model = model;
   }
 
-  async create(data: any, options: CreateOptions<T['_attributes']> = {}): Promise<T> {
-    try {
-      return await this.model.create(data, options);
-    } catch (error) {
-      logger.error(`Error creating ${this.model.name}:`, error as Error);
-      throw error;
-    }
+  create(data: any, options: CreateOptions<T['_attributes']> = {}): Effect.Effect<T, DatabaseError> {
+    return Effect.tryPromise({
+      try: () => this.model.create(data, options),
+      catch: (error) => {
+        logger.error(`Error creating ${this.model.name}:`, error as Error);
+        return new DatabaseError({ message: `Failed to create ${this.model.name}`, cause: error });
+      },
+    });
   }
 
-  async findById(id: string, options: FindOptions<T['_attributes']> = {}): Promise<T | null> {
-    try {
-      return await this.model.findByPk(id, options);
-    } catch (error) {
-      logger.error(`Error finding ${this.model.name} by ID:`, error as Error);
-      throw error;
-    }
+  findById(id: string, options: FindOptions<T['_attributes']> = {}): Effect.Effect<T | null, DatabaseError> {
+    return Effect.tryPromise({
+      try: () => this.model.findByPk(id, options),
+      catch: (error) => {
+        logger.error(`Error finding ${this.model.name} by ID:`, error as Error);
+        return new DatabaseError({ message: `Failed to find ${this.model.name} by ID: ${id}`, cause: error });
+      },
+    });
   }
 
-  async findOne(options: FindOptions<T['_attributes']> = {}): Promise<T | null> {
-    try {
-      return await this.model.findOne(options);
-    } catch (error) {
-      logger.error(`Error finding ${this.model.name}:`, error as Error);
-      throw error;
-    }
+  findOne(options: FindOptions<T['_attributes']> = {}): Effect.Effect<T | null, DatabaseError> {
+    return Effect.tryPromise({
+      try: () => this.model.findOne(options),
+      catch: (error) => {
+        logger.error(`Error finding ${this.model.name}:`, error as Error);
+        return new DatabaseError({ message: `Failed to find ${this.model.name}`, cause: error });
+      },
+    });
   }
 
-  async findAll(options: FindOptions<T['_attributes']> = {}): Promise<T[]> {
-    try {
-      return await this.model.findAll(options);
-    } catch (error) {
-      logger.error(`Error finding all ${this.model.name}:`, error as Error);
-      throw error;
-    }
+  findAll(options: FindOptions<T['_attributes']> = {}): Effect.Effect<T[], DatabaseError> {
+    return Effect.tryPromise({
+      try: () => this.model.findAll(options),
+      catch: (error) => {
+        logger.error(`Error finding all ${this.model.name}:`, error as Error);
+        return new DatabaseError({ message: `Failed to find all ${this.model.name}`, cause: error });
+      },
+    });
   }
 
-  async findAndCountAll(options: FindOptions<T['_attributes']> = {}): Promise<{ rows: T[]; count: number }> {
-    try {
-      return await this.model.findAndCountAll(options);
-    } catch (error) {
-      logger.error(`Error finding and counting ${this.model.name}:`, error as Error);
-      throw error;
-    }
+  findAndCountAll(options: FindOptions<T['_attributes']> = {}): Effect.Effect<{ rows: T[]; count: number }, DatabaseError> {
+    return Effect.tryPromise({
+      try: () => this.model.findAndCountAll(options),
+      catch: (error) => {
+        logger.error(`Error finding and counting ${this.model.name}:`, error as Error);
+        return new DatabaseError({ message: `Failed to find and count ${this.model.name}`, cause: error });
+      },
+    });
   }
 
-  async update(id: string, data: Partial<T['_attributes']>, options: UpdateOptions<T['_attributes']> = { where: {} }): Promise<T> {
-    try {
+  update(id: string, data: Partial<T['_attributes']>, options: UpdateOptions<T['_attributes']> = { where: {} }): Effect.Effect<T, DatabaseError | NotFoundError> {
+    return Effect.gen(function* (this: BaseRepository<T>) {
+      const self = this;
       const updateOptions = {
         ...options,
         where: {
@@ -63,22 +71,25 @@ export abstract class BaseRepository<T extends Model> {
           id,
         },
       } as UpdateOptions<T['_attributes']>;
-      const [updatedRowsCount] = await this.model.update(data, updateOptions);
+
+      const updateResult = yield* Effect.tryPromise({
+        try: () => self.model.update(data, updateOptions),
+        catch: (error) => new DatabaseError({ message: `Failed to update ${self.model.name}`, cause: error }),
+      });
+
+      const updatedRowsCount = updateResult[0];
 
       if (updatedRowsCount === 0) {
-        throw new Error(`${this.model.name} not found`);
+        return yield* Effect.fail(new NotFoundError({ message: `${self.model.name} not found` }));
       }
 
-      const updatedRecord = await this.findById(id);
+      const updatedRecord = yield* self.findById(id);
       if (!updatedRecord) {
-        throw new Error(`${this.model.name} not found after update`);
+        return yield* Effect.fail(new NotFoundError({ message: `${self.model.name} not found after update` }));
       }
 
       return updatedRecord;
-    } catch (error) {
-      logger.error(`Error updating ${this.model.name}:`, error as Error);
-      throw error;
-    }
+    }.bind(this)) as Effect.Effect<T, DatabaseError | NotFoundError>;
   }
 
   async delete(id: string, options: DestroyOptions<T['_attributes']> = {}): Promise<boolean> {

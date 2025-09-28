@@ -1,28 +1,30 @@
 // src/repositories/user.repository.ts
 import { Op } from 'sequelize';
+import { Effect } from 'effect';
 import { BaseRepository } from './base.repository';
 import { User, Profile, Role } from '@/models';
 import { IUserResponse } from '@/interfaces/user.interface';
 import { PaginationResponse } from '@/types/response.types';
+import { DatabaseError, NotFoundError } from '@/types/effect.types';
 
 export class UserRepository extends BaseRepository<User> {
   constructor() {
     super(User);
   }
 
-  async findByEmail(email: string, includePassword: boolean = false): Promise<User | null> {
-    const attributes = includePassword 
-      ? undefined 
+  findByEmail(email: string, includePassword: boolean = false): Effect.Effect<User | null, DatabaseError> {
+    const attributes = includePassword
+      ? undefined
       : { exclude: ['password', 'emailVerificationToken', 'passwordResetToken'] };
 
-    return await this.findOne({
+    return this.findOne({
       where: { email },
       attributes,
     });
   }
 
-  async findByEmailWithRoles(email: string): Promise<User | null> {
-    return await this.findOne({
+  findByEmailWithRoles(email: string): Effect.Effect<User | null, DatabaseError> {
+    return this.findOne({
       where: { email },
       include: [
         {
@@ -34,8 +36,8 @@ export class UserRepository extends BaseRepository<User> {
     });
   }
 
-  async findByIdWithProfile(id: string): Promise<User | null> {
-    return await this.findById(id, {
+  findByIdWithProfile(id: string): Effect.Effect<User | null, DatabaseError> {
+    return this.findById(id, {
       include: [
         {
           model: Profile,
@@ -46,11 +48,11 @@ export class UserRepository extends BaseRepository<User> {
     });
   }
 
-  async findUsersWithPagination(
+  findUsersWithPagination(
     page: number = 1,
     limit: number = 10,
     search: string = ''
-  ): Promise<PaginationResponse<IUserResponse>> {
+  ): Effect.Effect<PaginationResponse<IUserResponse>, DatabaseError> {
     const offset = (page - 1) * limit;
     const whereClause = search
       ? {
@@ -62,56 +64,58 @@ export class UserRepository extends BaseRepository<User> {
         }
       : {};
 
-    const result = await this.findAndCountAll({
-      where: whereClause,
-      limit,
-      offset,
-      order: [['createdAt', 'DESC']],
-      include: [
-        {
-          model: Profile,
-          as: 'profile',
-          attributes: ['avatar', 'phoneNumber'],
-        },
-        {
-          model: Role,
-          as: 'roles',
-          attributes: ['name'],
-        },
-      ],
-      attributes: { exclude: ['password', 'emailVerificationToken', 'passwordResetToken'] },
-    });
-
-    return {
-      items: result.rows.map(user => user.toSafeObject()),
-      pagination: {
-        total: result.count,
-        page,
+    return Effect.gen(function* (this: UserRepository) {
+      const result = yield* this.findAndCountAll({
+        where: whereClause,
         limit,
-        totalPages: Math.ceil(result.count / limit),
-      },
-    };
+        offset,
+        order: [['createdAt', 'DESC']],
+        include: [
+          {
+            model: Profile,
+            as: 'profile',
+            attributes: ['avatar', 'phoneNumber'],
+          },
+          {
+            model: Role,
+            as: 'roles',
+            attributes: ['name'],
+          },
+        ],
+        attributes: { exclude: ['password', 'emailVerificationToken', 'passwordResetToken'] },
+      });
+
+      return {
+        items: result.rows.map(user => user.toSafeObject()),
+        pagination: {
+          total: result.count,
+          page,
+          limit,
+          totalPages: Math.ceil(result.count / limit),
+        },
+      };
+    }.bind(this)) as Effect.Effect<PaginationResponse<IUserResponse>, DatabaseError>;
   }
 
-  async updateLastLogin(id: string): Promise<User> {
-    return await this.update(id, { lastLoginAt: new Date() });
+  updateLastLogin(id: string): Effect.Effect<User, DatabaseError | NotFoundError> {
+    return this.update(id, { lastLoginAt: new Date() });
   }
 
-  async setEmailVerified(id: string): Promise<User> {
-    return await this.update(id, {
+  setEmailVerified(id: string): Effect.Effect<User, DatabaseError | NotFoundError> {
+    return this.update(id, {
       emailVerified: true,
       emailVerificationToken: undefined,
     });
   }
 
-  async findByVerificationToken(token: string): Promise<User | null> {
-    return await this.findOne({
+  findByVerificationToken(token: string): Effect.Effect<User | null, DatabaseError> {
+    return this.findOne({
       where: { emailVerificationToken: token },
     });
   }
 
-  async findByPasswordResetToken(token: string): Promise<User | null> {
-    return await this.findOne({
+  findByPasswordResetToken(token: string): Effect.Effect<User | null, DatabaseError> {
+    return this.findOne({
       where: {
         passwordResetToken: token,
         passwordResetExpires: { [Op.gt]: new Date() },

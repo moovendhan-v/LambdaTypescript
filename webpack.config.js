@@ -7,13 +7,15 @@ module.exports = {
     'profile-handler': './src/handlers/profile-handler.ts',
   },
   target: 'node',
-  mode: 'production',
+  mode: 'development',
+  devtool: false,
   module: {
     rules: [
       {
         test: /\.ts$/,
         use: 'ts-loader',
         exclude: /node_modules/,
+        sideEffects: true,
       },
     ],
   },
@@ -40,5 +42,6 @@ module.exports = {
   },
   optimization: {
     minimize: false,
+    usedExports: false,
   },
 };
